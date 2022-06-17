@@ -1,0 +1,84 @@
+version "4.0"
+
+class KeeperHandler : EventHandler
+{
+	override void PlayerDied(PlayerEvent e)
+	{
+		let plr = HDPlayerPawn(players[e.PlayerNumber].mo);
+		if (plr)
+		{
+			let restorer = StatRestorer(plr.GiveInventoryType('StatRestorer'));
+			if (restorer)
+			{
+				restorer.OpenWounds = int(plr.woundcount * clamp(keeper_percent_bleeding, 0, 1.0));
+				restorer.UnstableWounds = int(plr.unstablewoundcount * clamp(keeper_percent_wounds, 0, 1.0));
+				restorer.TreatedWounds = int(plr.oldwoundcount * clamp(keeper_percent_wounds, 0, 1.0));
+
+				restorer.Burns = int(plr.burncount * clamp(keeper_percent_burns, 0, 1.0));
+				restorer.Aggro = int(plr.aggravateddamage * clamp(keeper_percent_aggro, 0, 1.0));
+				restorer.Bloodloss = int(plr.bloodloss * clamp(keeper_percent_blood, 0, 1.0));
+
+				Name diseaseClsName = 'DiseaseBase';
+				if (keeper_percent_diseases > 0 && (class<Inventory>)(diseaseClsName))
+				{
+					for (Inventory next = plr.Inv; next != null; next = next.Inv)
+					{
+						if (next is diseaseClsName)
+						{
+							int amt = int(next.Amount * clamp(keeper_percent_diseases, 0, 1.0));
+							if (amt > 0)
+							{
+								restorer.DiseaseClasses.Push(next.GetClass());
+								restorer.DiseaseAmounts.Push(amt);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+// [Ace] Defer restoring stats a few tics later otherwise the player's OnRespawn virtual will clear everything you do in PlayerRespawned.
+class StatRestorer : Inventory
+{
+	override void DoEffect()
+	{
+		let plr = HDPlayerPawn(owner);
+		if (plr && plr.Health > 0 && ++AliveTicker > 2)
+		{
+			plr.woundcount = OpenWounds;
+			plr.unstablewoundcount = UnstableWounds;
+			plr.oldwoundcount = TreatedWounds;
+
+			plr.aggravateddamage = Aggro;
+			plr.burncount = Burns;
+			plr.bloodloss = min(HDCONST_MAXBLOODLOSS, plr.bloodloss + Bloodloss); // [Ace] Add to PoF's bloodloss.
+
+			for (int i = 0; i < DiseaseClasses.Size(); ++i)
+			{
+				plr.A_GiveInventory(DiseaseClasses[i], DiseaseAmounts[i]);
+			}
+
+			Destroy();
+			return;
+		}
+
+		Super.DoEffect();
+	}
+
+	int AliveTicker;
+
+	int OpenWounds, UnstableWounds, TreatedWounds;
+	int Aggro;
+	int Burns;
+	int Bloodloss;
+
+	Array<class<Inventory> > DiseaseClasses;
+	Array<int> DiseaseAmounts;
+
+	Default
+	{
+		Inventory.MaxAmount 1;
+	}
+}

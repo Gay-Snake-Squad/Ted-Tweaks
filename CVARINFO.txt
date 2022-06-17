@@ -1,0 +1,6 @@
+server float keeper_percent_bleeding = 0.6;
+server float keeper_percent_wounds = 0.6;
+server float keeper_percent_burns = 0.6;
+server float keeper_percent_aggro = 0.6;
+server float keeper_percent_blood = 0.6;
+server float keeper_percent_diseases = 0.6;
