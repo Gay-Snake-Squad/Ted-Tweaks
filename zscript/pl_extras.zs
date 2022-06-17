@@ -13,12 +13,14 @@ extend class HDPlayerPawn{
 		if(!antenna)antenna=spawn("PlayerAntenna",newpos,ALLOW_REPLACE);
 		else antenna.setorigin(newpos,false);
 	}
+
 	//check mantling
 	//returns: -1 cannot mantle; 0 cannot mantle but on ground; 1 can mantle
 	int MantleCheck(){
 		if(incapacitated||incaptimer)return -1;
 		bool onground=player.onground;
 		int res=onground?0:-1;
+
 		//check if there's a wall to kick off of
 		if(
 			res<0
@@ -59,6 +61,8 @@ extend class HDPlayerPawn{
 			)res=0;
 			maxstepheight=mshbk;
 		}
+
+
 		/*
 			2021-10-24 After some consideration it appears there is no
 			benefit in treating the initial boost upwards as anything
@@ -73,6 +77,8 @@ extend class HDPlayerPawn{
 			&&fatigue<HDCONST_SPRINTFATIGUE
 			&&player.crouchfactor==1.
 		)return 0;
+
+
 		//determine max height
 		double mantlemax=36;  //basically just flop onto the thing and pull your legs up
 		if(
@@ -84,12 +90,17 @@ extend class HDPlayerPawn{
 		)mantlemax=64;
 		mantlemax*=heightmult*player.crouchfactor;
 		double absmm=mantlemax+pos.z;
+
 		//place the antenna
 		A_MoveAntenna(pos+((cos(angle),sin(angle))*(radius+2),mantlemax));
+
+
 		//check if blocked by geometry
 		antenna.setz(absmm);
 		antenna.FindFloorCeiling();
 		double zat=antenna.floorz;
+
+
 		//check if blocked by actor
 		blockthingsiterator it=blockthingsiterator.create(antenna,1.);
 		double apx=antenna.pos.x;double apy=antenna.pos.y;
@@ -116,9 +127,12 @@ extend class HDPlayerPawn{
 					itt.angle+=frandom(-10,10);
 					muzzleclimb1.x+=frandom(-3,3);
 					muzzleclimb1.y+=frandom(-1,1);
+
 					itt.vel.xy+=(frandom(-0.3,0.3),frandom(-0.3,0.3))
 						+angletovector(angle,frandom(0,0.3));
+
 					bool friendly=itt.isfriend(self);
+
 					if(
 						!friendly
 						||!itt.bnofear
@@ -156,10 +170,14 @@ extend class HDPlayerPawn{
 				zat=max(dz,zat);
 			}
 		}
+
 		if(
 			zat>absmm
 			||zat<pos.z+maxstepheight
 		)return res;
+
+
+
 		//thrust player upwards and forwards
 		if(
 			onground
@@ -197,6 +215,7 @@ extend class HDPlayerPawn{
 					&&fm
 					&&!sm
 					&&player.crouchfactor<0.9
+
 					//this is just copypasted from jump below
 					&&!(oldinput & BT_JUMP)
 					&&fatigue<HDCONST_SPRINTFATIGUE
@@ -222,9 +241,11 @@ extend class HDPlayerPawn{
 					else rollamt=-20-sqrt(vxysq);
 					if(rollamt){
 						ForwardRoll(int(rollamt),FROLL_VOLUNTARY);
+						A_ChangeVelocity(rollamt*0.2,0,player.onground?abs(rollamt)*0.1:0,CVF_RELATIVE);
 						return;
 					}
 				}else maxstepheight=mshbak;
+
 				// jump-to-stand is in CrouchCheck not here
 			}
 			else if(waterlevel>=2){
@@ -243,6 +264,7 @@ extend class HDPlayerPawn{
 			){
 				double jumppower=max(0,maxspeed*strength+1);
 				double jz=jumppower*0.5;
+
 				vector2 jumpdir=(0,0);
 				if(!sm){
 					double ppp=pitch;
@@ -253,12 +275,14 @@ extend class HDPlayerPawn{
 					}else{
 						ppp=-90;
 					}
+
 					if(fm<0)jumpdir*=-1;
 					else if(ppp<0){
 						double pstr=jumppower*ppp*(-1./90.);
 						jz+=pstr;
 						jumppower-=pstr;
 					}
+
 				}else if(!fm){
 					//side
 					double rangle=angle+(sm>0?-90:90);
@@ -273,21 +297,27 @@ extend class HDPlayerPawn{
 					jumpdir.y=sin(rangle);
 				}
 				if(!checkmove(pos.xy+jumpdir*2,PCM_NOACTORS))jumpdir=(0,0);
+
+
 				if(fm>0)jumppower*=(sm?1.2:1.4);
 				vel.xy+=jumpdir*jumppower;
 				vel.z+=jz;
+
 				A_StartSound(
 					landsound,CHAN_BODY,CHANF_OVERLAP,
 					volume:min(1.,jumppower*0.04)
 				);
+
 				jumptimer+=18;
 				fatigue+=3;
+
 				//copied from sprint
 				if(fatigue>=HDCONST_SPRINTFATIGUE){
 					fatigue+=20;
 					stunned+=400;
 					A_StartSound(painsound,CHAN_VOICE);
 				}
+
 				if(bloodpressure<40)bloodpressure+=2;
 			}
 		}
@@ -309,12 +339,16 @@ extend class HDPlayerPawn{
 			double fmm=fm>0?mm:fm<0?-mm*0.6:0;
 			double smm=sm>0?-mm:sm<0?mm:0;
 			A_ChangeVelocity(fmm,smm,-0.6,CVF_RELATIVE);
+
 			fatigue+=2;
 			bloodpressure=max(bloodpressure,20);
+
 			int stmod=int(strength*6.);
 			stunned+=15-(stmod>>1);
 			jumptimer+=35-stmod;
+
 			smm*=-frandom(0.4,0.7);
+
 			double slidemult=1.;
 			let hdw=HDWeapon(player.readyweapon);
 			if(hdw)slidemult=max(1.,0.1*hdw.gunmass());
@@ -345,6 +379,7 @@ extend class HDPlayerPawn{
 			}
 		}
 	}
+
 	enum ForwardRollFlags{
 		FROLL_ADD=1,
 		FROLL_FORCE=2,
@@ -367,6 +402,7 @@ extend class HDPlayerPawn{
 				)
 			)
 		)return;
+
 		//if voluntary, check if there's space in the direction being rolled.
 		if(
 			flags&FROLL_VOLUNTARY
@@ -374,6 +410,7 @@ extend class HDPlayerPawn{
 			vector2 checkpos=pos.xy+((cos(angle),sin(angle))*(amt<0?-10:10));
 			if(!checkmove(checkpos))return;
 		}
+
 		if(amt>0){
 			if(!(flags&FROLL_FORCE)&&fallroll<0)return;
 			if(flags&FROLL_ADD)fallroll+=amt;
@@ -384,8 +421,9 @@ extend class HDPlayerPawn{
 			else fallroll=min(fallroll,amt);
 		}
 		realpitch=pitch;
-		A_ChangeVelocity(0.2*amt,0,player.onground?abs(amt)*0.1:0,CVF_RELATIVE);
 	}
+
+
 	//all use button stuff other than normal using should go here
 	virtual void UseButtonCheck(int input){
 		if(!(input&BT_USE)){
@@ -394,9 +432,12 @@ extend class HDPlayerPawn{
 		}
 		if(oldinput&BT_ATTACK)hasgrabbed=true;
 		else if(!(oldinput&BT_USE))hasgrabbed=false;
+
         PickupGrabber(incapacitated?2:-1);
+
 		//check here because we still need the above pickup checks when incap'd
 		if(incapacitated)return;
+
 		//door kicking
 		if(
 			input&BT_SPEED
@@ -406,7 +447,7 @@ extend class HDPlayerPawn{
 			&&linetrace(angle,42,pitch,flags:TRF_THRUACTORS,offsetz:height*0.4)
 		){
 			hasgrabbed=true;
-			jumptimer=20+int(hdbleedingwound.woundcount(self));
+			jumptimer=20+(unstablewoundcount>>1);
 			stunned+=25;
 			double kickback=strength;
 			
@@ -417,7 +458,8 @@ extend class HDPlayerPawn{
 				offsetz:height*0.77,
 				data:kickline
 			);
-			bool db=doordestroyer.destroydoor(self,frandom(0,frandom(0,72))*strength,frandom(0,frandom(0,16)*strength),ofsz:24);
+
+			bool db=doordestroyer.destroydoor(self,frandom(32,72)*strength,frandom(0,frandom(1,16)*strength),ofsz:24);
 			if(!random(0,db?7:3)){
 				jumptimer+=20;
 				damagemobj(self,self,random(1,5),"Bashing");
@@ -425,7 +467,7 @@ extend class HDPlayerPawn{
 				kickback*=frandom(1,2);
 				A_MuzzleClimb((frandom(-1,1),4),(frandom(-1,1),-1),(frandom(-1,1),-1),(frandom(-1,1),-1));
 			}
-			if(!random(0,db?3:6))hdbleedingwound.inflict(self,1,source:self);
+			if(!random(0,db?3:6))woundcount++;
 			A_MuzzleClimb((0,-1),(0,-1),(0,-1),(0,-1));
 			A_ChangeVelocity(-kickback,0,0,CVF_RELATIVE);
 			A_StartSound("*fist",CHAN_BODY,CHANF_OVERLAP);
@@ -435,7 +477,10 @@ extend class HDPlayerPawn{
 				offsetz:height*0.3
 			);
 		}
+
+
 		bpickup=!hasgrabbed;
+
 		//corpse kicking
 		if(
 			!jumptimer
@@ -463,7 +508,7 @@ extend class HDPlayerPawn{
 					){
 						if(!(oldinput&BT_USE)){
 							double forc=30*strength;
-							jumptimer=20+(int(hdbleedingwound.woundcount(self))>>1);
+							jumptimer=20+(unstablewoundcount>>1);
 							kbmo.vel+=(kv.x,kv.y,2.)*forc/kbmo.mass;
 							kbmo.A_StartSound("misc/punch",CHAN_BODY,CHANF_OVERLAP);
 							HDPlayerPawn.CheckStrip(kbmo,kbmo);
@@ -473,12 +518,12 @@ extend class HDPlayerPawn{
 						kbmo.health>0
 						&&ishostile(kbmo)
 					){
-						jumptimer=17+(int(hdbleedingwound.woundcount(self))>>1);
+						jumptimer=17+(unstablewoundcount>>1);
 						kicked=true;
 						kick(kbmo,k);
 					}else{
 						double forc=0.4*strength;
-						jumptimer=20+int(hdbleedingwound.woundcount(self)*0.6);
+						jumptimer=20+unstablewoundcount*3/5;
 						vel-=(kv.x,kv.y,4)*forc/heightmult;
 						kbmo.A_StartSound("misc/punch",CHAN_BODY,CHANF_OVERLAP);
 						kicked=true;
@@ -492,12 +537,15 @@ extend class HDPlayerPawn{
 			if(k)k.destroy();
 		}
 	}
+
 	void kick(actor kickee,actor kicking){
 		kickee.A_StartSound("weapons/smack",CHAN_BODY,CHANF_OVERLAP);
+
 		vector3 approachvel=
 			(kickee.pos-pos)
 			-((kickee.pos+kickee.vel)-(pos+vel))
 		;
+
 		int dmg=kickee.damagemobj(kicking,self,
 			int((approachvel dot approachvel)*0.01)
 			+int(frandom(10,20)*strength),
@@ -505,6 +553,7 @@ extend class HDPlayerPawn{
 		);
 		vector3 kickdir=(kickee.pos-pos).unit();
 		vel-=kickdir;
+
 		if(!kickee)return;
 		if(random(0,4))hdmobbase.forcepain(kickee);
 		if(
@@ -515,6 +564,7 @@ extend class HDPlayerPawn{
 			kickee.target=self;
 		}
 		if(!kickee.bdontthrust)kickee.vel=kickdir*strength*mass/max(mass*0.3,kickee.mass);
+
 		if(
 			kickee.health>0
 			&&hdmobbase.inpainablesequence(kickee)
@@ -525,6 +575,9 @@ extend class HDPlayerPawn{
 		}
 	}
 }
+
+
+
 extend class HDHandlers{
 	static void FindRange(hdplayerpawn ppp){
 		flinetracedata frt;
@@ -537,6 +590,7 @@ extend class HDHandlers{
 		double b=c/HDCONST_ONEMETRE;
 		ppp.A_Log(string.format("\cd[\cuRF\cd]\cj \cf%.2f\cj metre%s",b,b==1?"":"s"),true);
 		if(hd_debug)ppp.A_Log(string.format("("..(ppp.player?ppp.player.getusername():"something").." measured %.2f DU%s)",c,c==1?"":"s"),true);
+
 		if(
 			ppp.player
 			&&ppp.player.cmd.buttons&BT_USE
@@ -563,6 +617,8 @@ extend class HDHandlers{
 		if(ppp.player){
 			int rollamt=clamp(amt,-20,20);
 			ppp.ForwardRoll(rollamt,ppp.FROLL_VOLUNTARY);
+			if(ppp.player.onground)
+				ppp.A_ChangeVelocity(0.2*rollamt,0,0.1*abs(rollamt),CVF_RELATIVE);
 		}
 	}
 }
@@ -578,6 +634,8 @@ class DelayedTaunter:Thinker{
 		}
 	}
 }
+
+
 extend class HDPlayerPawn{
 	array<actor> nearbyfriends;
 	void UpdateNearbyFriends(){
