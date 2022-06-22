@@ -722,6 +722,15 @@ class GreenSphere:BlueSphere replaces Invulnerabilitysphere{
 		height 12;
 		radius 12;
 	}
+	override void PostBeginPlay()
+	{
+		if (hd_nonecroghost)
+		{
+			bSHOOTABLE = false;
+			bNODAMAGE = false;
+		}
+		Super.PostBeginPlay();
+	}
 	override void A_HDUPKGive(){
 		if(bnointeraction||health<1||!picktarget)return;
 		bnointeraction=true;

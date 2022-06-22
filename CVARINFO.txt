@@ -5,3 +5,4 @@ server float keeper_percent_aggro = 0.6;
 server float keeper_percent_blood = 0.6;
 server float keeper_percent_diseases = 0.6;
 server float keeper_percent_blues = 0.6;
+server bool hd_nonecroghost = false;

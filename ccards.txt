@@ -1,0 +1,2 @@
+removecard CCard_Invisibility
+excludemap RANGE
