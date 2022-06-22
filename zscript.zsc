@@ -13,7 +13,7 @@ class KeeperHandler : EventHandler
 				restorer.OpenWounds = int(plr.woundcount * clamp(keeper_percent_bleeding, 0, 1.0));
 				restorer.UnstableWounds = int(plr.unstablewoundcount * clamp(keeper_percent_wounds, 0, 1.0));
 				restorer.TreatedWounds = int(plr.oldwoundcount * clamp(keeper_percent_wounds, 0, 1.0));
-
+				restorer.Blues = int(plr.CountInv('HDBlues') * clamp(keeper_percent_blues, 0, 1.0));
 				restorer.Burns = int(plr.burncount * clamp(keeper_percent_burns, 0, 1.0));
 				restorer.Aggro = int(plr.aggravateddamage * clamp(keeper_percent_aggro, 0, 1.0));
 				restorer.Bloodloss = int(plr.bloodloss * clamp(keeper_percent_blood, 0, 1.0));
@@ -50,7 +50,7 @@ class StatRestorer : Inventory
 			plr.woundcount = OpenWounds;
 			plr.unstablewoundcount = UnstableWounds;
 			plr.oldwoundcount = TreatedWounds;
-
+			plr.A_GiveInventory('HDBlues', Blues);
 			plr.aggravateddamage = Aggro;
 			plr.burncount = Burns;
 			plr.bloodloss = min(HDCONST_MAXBLOODLOSS, plr.bloodloss + Bloodloss); // [Ace] Add to PoF's bloodloss.
