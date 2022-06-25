@@ -640,7 +640,7 @@ class HDStatusBar:DoomStatusBar{
 					DTA_VirtualWidth,640,DTA_VirtualHeight,480
 				);
 				
-			/*string s=hpl.wephelptext;
+			string s=hpl.wephelptext;
 			if(s!="")screen.DrawText(NewSmallFont,OptionMenuSettings.mFontColorValue,
 				8,
 				wephelpheight,
@@ -650,7 +650,7 @@ class HDStatusBar:DoomStatusBar{
 				DTA_Alpha,0.8
 			);
 
-			wephelpheight+=NewSmallFont.GetHeight();
+			/*wephelpheight+=NewSmallFont.GetHeight();
 			screen.DrawText(NewSmallFont,
 				font.CR_OLIVE,
 				600,
