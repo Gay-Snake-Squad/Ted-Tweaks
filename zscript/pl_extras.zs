@@ -435,9 +435,6 @@ extend class HDPlayerPawn{
 
         PickupGrabber(incapacitated?2:-1);
 
-		//check here because we still need the above pickup checks when incap'd
-		if(incapacitated)return;
-
 		//door kicking
 		if(
 			input&BT_SPEED
