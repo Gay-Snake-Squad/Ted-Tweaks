@@ -408,20 +408,13 @@ extend class HDPlayerPawn{
 			a_setrenderstyle(1.,STYLE_Normal);
 		}
 
-		if(
-			player
-			&&player
-			&&cvar.getcvar("hd_consolidate",player).getbool()
-		)ConsolidateAmmo();
+		if(!player)return;
 
-		if(
-			player
-			&&player.mo
-			&&player==players[consoleplayer]
-		){
-			Shader.SetEnabled(player,"NiteVis",false);
-			if(getage()>10)showgametip();
-		}
+		if(cvar.getcvar("hd_consolidate",player).getbool())ConsolidateAmmo();
+
+		if(getage()>10)showgametip();
+
+		if(player==players[consoleplayer])PPShader.SetEnabled("NiteVis",false);
 	}
 }
 class kickchecker:actor{
