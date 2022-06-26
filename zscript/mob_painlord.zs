@@ -11,10 +11,8 @@ class PainMonster:HDMobBase{
 	override void postbeginplay(){
 		super.postbeginplay();
 		bsmallhead=bplayingid;
-		if(
-			!bplayingid
-			&&getclassname()!="PainLord"  //2022-05-28 FD's sprite still uses green blood in death anim
-		){
+
+		if(!bplayingid){
 			for(int i=0;i<MAXPLAYERS;i++){
 				let hdp=hdplayerpawn(players[i].mo);
 				if(hdp)CopyBloodColor(hdp);
@@ -25,6 +23,7 @@ class PainMonster:HDMobBase{
 		return super.bulletresistance(hitangle);
 	}
 }
+
 // ------------------------------------------------------------
 // Pain Lord
 // ------------------------------------------------------------
@@ -41,7 +40,7 @@ class PainLord:PainMonster replaces BaronofHell{
 		obituary "$ob_baron";
 		hitobituary "$ob_baronhit";
 		tag "$CC_BARON";
-		+e1m8boss
+
 		+missilemore +dontharmspecies
 		maxtargetrange 65536;
 		damagefactor "hot",0.8;
@@ -61,6 +60,7 @@ class PainLord:PainMonster replaces BaronofHell{
 		BE_OKAY=BE_HPMAX*7/10,
 		BE_BAD=BE_HPMAX*3/10,
 	}
+
 	override double bulletshell(vector3 hitpos,double hitangle){
 		return frandom(3,12);
 	}
@@ -98,45 +98,28 @@ class PainLord:PainMonster replaces BaronofHell{
 		BOSS ABCD 8 A_HDWander(CHF_LOOK);
 		loop;
 	missile:
-		BOSS ABCD 3 A_TurnToAim(30,32);
-		loop;
-	shoot:
-		BOSS A 0{
-			A_ShoutAlert(0.8,SAF_SILENT);
-			if(
-				lasttargetdist<420
-				||!random(0,5)
-			)return;
-			if(
-				health>BE_OKAY
-				||health<BE_BAD
-			)setstatelabel("MissileAll");
-			else if(!random(0,1))setstatelabel("MissileSkull");
-			else setstatelabel("MissileAura");
+		BOSS ABCD 3{
+			A_FaceTarget(30);
+			if(A_JumpIfTargetInLOS("shoot",10))setstatelabel("shoot");
 		}
-		goto MissileSweep;
+		BOSS E 0 A_JumpIfTargetInLOS("missile");
+		---- A 0 setstatelabel("see");
+	shoot:
+		BOSS A 0 A_ShoutAlert(0.8,SAF_SILENT);
+		BOSS E 0 A_Jump(64,2);
+		BOSS E 0 A_JumpIfCloser(420,"MissileSweep");
+		BOSS E 0 A_JumpIfHealthLower(BE_OKAY,1);
+		goto MissileFuckYou;
+		BOSS E 0 A_JumpIfHealthLower(BE_BAD,"MissileFuckYou");
+		BOSS E 0 A_Jump(16,"MissileFuckYou");
+		BOSS E 0 A_Jump(256,"MissileSkull","MissileMissile");
 	MissileSkull:
-		BOSS H 10;
-		BOSS H 2 A_LeadTarget(lasttargetdist*0.10);
-		BOSS H 12 bright A_SpawnProjectile("BelphBall",34,0,0,2,pitch);
+		BOSS H 12 A_FaceTarget(0,0);
+		BOSS H 12 bright A_SpawnProjectile("BelphBall",28,0,0,2,pitch);
 		BOSS H 18;
 		goto MissileSweep;
-	MissileAll:
-		BOSS H 12;
-		BOSS H 6 A_LeadTarget(lasttargetdist*0.12);
-		BOSS H 0 bright A_SpawnProjectile("BaleBall",38,0,2,0,0);
-		BOSS H 0 bright A_SpawnProjectile("BaleBall",38,0,-2,0,0);
-		BOSS H 0 bright A_SpawnProjectile("MiniBBall",46,0,5,2,0);
-		BOSS H 6 bright A_SpawnProjectile("MiniBBall",46,0,-5,2,0);
-		BOSS H 0 bright A_SpawnProjectile("MiniBBall",56,0,7,2,4);
-		BOSS H 6 bright A_SpawnProjectile("MiniBBall",56,0,-7,2,4);
-		BOSS H 0 bright A_SpawnProjectile("MiniBBall",66,0,12,2,7);
-		BOSS H 6 bright A_SpawnProjectile("MiniBBall",66,0,-12,2,7);
-		BOSS H 12 bright A_SpawnProjectile("BelphBall",28,0,0,2,pitch);
-		---- A 0 setstatelabel("see");
-	MissileAura:
-		BOSS H 10;
-		BOSS H 6 A_LeadTarget(lasttargetdist*0.12);
+	MissileMissile:
+		BOSS H 16 A_FaceTarget(20,20);
 		BOSS H 0 bright A_SpawnProjectile("BaleBall",38,0,2,0,0);
 		BOSS H 6 bright A_SpawnProjectile("BaleBall",38,0,-2,0,0);
 		BOSS H 0 bright A_SpawnProjectile("MiniBBall",46,0,9,2,0);
@@ -147,9 +130,24 @@ class PainLord:PainMonster replaces BaronofHell{
 		BOSS H 6 bright A_SpawnProjectile("MiniBBall",66,0,-24,2,7);
 		BOSS H 12;
 		---- A 0 setstatelabel("see");
+	MissileFuckYou:
+		BOSS H 18 A_FaceTarget(20,20);
+		BOSS H 0 bright A_SpawnProjectile("BaleBall",38,0,2,0,0);
+		BOSS H 0 bright A_SpawnProjectile("BaleBall",38,0,-2,0,0);
+		BOSS H 0 bright A_SpawnProjectile("MiniBBall",46,0,5,2,0);
+		BOSS H 6 bright A_SpawnProjectile("MiniBBall",46,0,-5,2,0);
+		BOSS H 0 bright A_SpawnProjectile("MiniBBall",56,0,7,2,4);
+		BOSS H 6 bright A_SpawnProjectile("MiniBBall",56,0,-7,2,4);
+		BOSS H 0 bright A_SpawnProjectile("MiniBBall",66,0,12,2,7);
+		BOSS H 6 bright A_SpawnProjectile("MiniBBall",66,0,-12,2,7);
+		BOSS H 12 bright A_SpawnProjectile("BelphBall",28,0,0,2,pitch);
+		---- A 0 setstatelabel("see");
+	pain:
+		BOSS H 6 A_Pain();
+		BOSS H 3 A_Jump(116,"see","MissileSkull");
 	MissileSweep:
-		BOSS F 4;
-		BOSS E 6 A_LeadTarget(lasttargetdist*0.14);
+		BOSS F 4 A_FaceTarget(20,20);
+		BOSS E 6;
 		BOSS E 2 A_SpawnProjectile("MiniBBall",56,6,-6,CMF_AIMDIRECTION,pitch);
 		BOSS F 2 A_SpawnProjectile("MiniBBall",46,4,-3,CMF_AIMDIRECTION,pitch);
 		BOSS F 2 A_SpawnProjectile("MiniBBall",38,0,-1,CMF_AIMDIRECTION,pitch);
@@ -159,9 +157,6 @@ class PainLord:PainMonster replaces BaronofHell{
 		BOSS G 6;
 		BOSS E 2 A_Jump(194,"see");
 		loop;
-	pain:
-		BOSS H 6 A_Pain();
-		BOSS H 3 A_Jump(116,"see","MissileSkull");
 	melee:
 		BOSS E 6 A_FaceTarget();
 		BOSS F 2;
@@ -180,15 +175,13 @@ class PainLord:PainMonster replaces BaronofHell{
 		TNT1 A 0 A_BossDeath();
 		stop;
 	death:
-		---- A 0{
-			bodydamage+=666*5;
-			A_QuakeEx(1,1,2,64,0,512,flags:QF_SCALEDOWN,falloff:32);
-		}
+		---- A 0{bodydamage+=666*5;}
+		---- A 0 A_Quake(2,64,0,600);
 		BOSS I 2 A_SpawnItemEx("BFGNecroShard",0,0,20,10,0,8,45,SXF_NOCHECKPOSITION|SXF_TRANSFERPOINTERS);
 		BOSS I 2 A_SpawnItemEx("BFGNecroShard",0,0,35,10,0,8,135,SXF_NOCHECKPOSITION|SXF_TRANSFERPOINTERS);
 		BOSS I 2 A_SpawnItemEx("BFGNecroShard",0,0,50,10,0,8,225,SXF_NOCHECKPOSITION|SXF_TRANSFERPOINTERS);
 		BOSS I 2 A_SpawnItemEx("BFGNecroShard",0,0,65,10,0,8,315,SXF_NOCHECKPOSITION|SXF_TRANSFERPOINTERS);
-		BOSS J 8 A_Vocalize(default.deathsound);
+		BOSS J 8 A_Scream();
 		BOSS KLMN 8;
 		BOSS OOOOO 6;
 		BOSS O -1 A_BossDeath();
@@ -204,6 +197,8 @@ class PainLord:PainMonster replaces BaronofHell{
 		#### A 0 A_Jump(256,"see");
 	}
 }
+
+
 class BelphBall:FastProjectile{
 	default{
 		+forcexybillboard +seekermissile +hittracer
@@ -211,37 +206,26 @@ class BelphBall:FastProjectile{
 		decal "bigscorch";
 		renderstyle "add";
 		alpha 0.05;
-		radius 4;
-		height 4;
+		scale 0.6;
+		radius 12;
+		height 13;
 		speed 2;
 		damage 8;
-		seesound "baron/bigballf";
+		seesound "skull/melee";
 		deathsound "baron/bigballx";
 	}
 	override void postbeginplay(){
 		super.postbeginplay();
+
 		let hdmb=hdmobbase(target);
 		if(hdmb)hdmb.firefatigue+=int(HDCONST_MAXFIREFATIGUE*0.7);
 	}
 	states{
 	spawn:
-		MISL DCCBB 1 bright A_FadeIn(0.2);
-		BAL1 A 0 bright A_ScaleVelocity(32);
+		MISL DCCBBA 1 bright A_FadeIn(0.2);
+		MISL A 0 bright A_ScaleVelocity(32);
 	see:
-		BAL1 AB 1{
-			vector3 vv=vel*0.3;
-			vector3 vvv=vv*-0.1;
-			vector3 vvvv=vel.unit();
-			double vl=vel.length();
-			for(int i=0;i<4;i++)A_SpawnParticle(
-				"ef ff db",SPF_FULLBRIGHT,
-				random(10,20),frandom(30,40),
-				0,
-				vvvv.x*frandom(0,-vl),vvvv.y*frandom(0,-vl),vvvv.z*frandom(0,-vl)+4,
-				vv.x+frandom(-1,1),vv.y*0.3+frandom(-1,1),vv.z*0.3+frandom(0.9,1.3),
-				vvv.x,vvv.y,vvv.z+0.01
-			);
-		}
+		MISL A -1;
 		loop;
 	death:
 		MISL BBBBBB 0 A_SpawnItemEx("HDSmoke",0,0,random(-2,4),frandom(-2,2),frandom(-2,2),random(3,5),0,SXF_NOCHECKPOSITION);
@@ -253,6 +237,7 @@ class BelphBall:FastProjectile{
 		stop;
 	}
 }
+
 class MiniBBallTail:HDActor{
 	default{
 		+nointeraction
@@ -268,6 +253,7 @@ class MiniBBallTail:HDActor{
 		loop;
 	}
 }
+
 class MiniBBall:HDActor{
 	default{
 		+forcexybillboard
@@ -288,6 +274,7 @@ class MiniBBall:HDActor{
 	int user_counter;
 	override void postbeginplay(){
 		super.postbeginplay();
+
 		let hdmb=hdmobbase(target);
 		if(hdmb)hdmb.firefatigue+=int(HDCONST_MAXFIREFATIGUE*0.1);
 	}
@@ -323,6 +310,7 @@ class MiniBBall:HDActor{
 		stop;
 	}
 }
+
 class zbbt:hdfireballtail{
 	default{
 		translation 2;
@@ -373,6 +361,7 @@ class BaleBall:hdfireball{
 			if(!blockingmobj){
 				tracer=null;
 				setstatelabel("burn");
+
 				lingerburner=spawn("BaleBallBurner",pos,ALLOW_REPLACE);
 				lingerburner.target=target;lingerburner.master=self;
 				return;
@@ -401,11 +390,14 @@ class BaleBall:hdfireball{
 				addz(0.1);
 				return;
 			}
+
 			if(tracer is "HDPlayerPawn"&&tracer.health<1&&HDPlayerPawn(tracer).playercorpse){
 				tracer=HDPlayerPawn(tracer).playercorpse;
 			}
+
 			double trad=tracer.radius;double tht=tracer.height;
 			setxyz(tracer.pos+(frandom(-trad,trad),frandom(-trad,trad),frandom(tht*0.5,tht)));
+
 			if(alpha>0.3){
 				tracer.damagemobj(self,target,random(1,3),"balefire");
 			}else{
